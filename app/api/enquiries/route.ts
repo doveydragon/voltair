@@ -1,0 +1,5 @@
+import { getDb } from "@/db";
+import { enquiries } from "@/db/schema";
+import { z } from "zod";
+const enquirySchema = z.object({ name: z.string().trim().min(2).max(100), email: z.string().trim().email().max(200), phone: z.string().trim().min(7).max(40), service: z.enum(["Electrical", "Air conditioning", "Property maintenance", "Maintenance plan"]), suburb: z.string().trim().max(100).optional().default(""), message: z.string().trim().min(5).max(2000), consent: z.literal("yes") });
+export async function POST(request: Request) { try { const parsed = enquirySchema.safeParse(await request.json()); if (!parsed.success) return Response.json({ error: "Please check the details and try again." }, { status: 400 }); const { consent: _consent, ...data } = parsed.data; const [enquiry] = await getDb().insert(enquiries).values(data).returning({ id: enquiries.id }); return Response.json({ id: enquiry.id }, { status: 201 }); } catch { return Response.json({ error: "We could not save your enquiry. Please try again shortly." }, { status: 500 }); } }
