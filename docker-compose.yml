@@ -1,0 +1,28 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voltair
+    restart: unless-stopped
+    environment:
+      ENQUIRY_DATA_FILE: /data/enquiries.ndjson
+    volumes:
+      - voltair_enquiries:/data
+    networks:
+      - root_default
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=root_default
+      - traefik.http.routers.voltair.rule=Host(`volt-air.site`) || Host(`www.volt-air.site`)
+      - traefik.http.routers.voltair.entrypoints=websecure
+      - traefik.http.routers.voltair.tls=true
+      - traefik.http.routers.voltair.tls.certresolver=mytlschallenge
+      - traefik.http.services.voltair.loadbalancer.server.port=3000
+
+networks:
+  root_default:
+    external: true
+
+volumes:
+  voltair_enquiries:
